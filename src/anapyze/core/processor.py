@@ -9,7 +9,7 @@ from anapyze.io import spm
 from anapyze.io import cat12
 
 
-def run_matlab_command(mfile, matlab_cmd="/Applications/MATLAB_R2023b.app/bin/matlab"):
+def run_matlab_command(mfile, matlab_cmd="/usr/local/MATLAB/R2025a/bin/matlab"):
     mfile_path, mfile_name = os.path.split(mfile)
 
     command = f"{matlab_cmd} -nosplash -sd {mfile_path} -batch {mfile_name[0:-2]}"
