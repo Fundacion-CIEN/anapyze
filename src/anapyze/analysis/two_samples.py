@@ -1,11 +1,14 @@
 import os
 from os.path import exists, join
+import numpy as np
+import nibabel as nib
 import shutil
 import subprocess
 from anapyze.io import spm
 from anapyze.io import cat12
 from anapyze.core import processor
 from anapyze.core import utils
+from scipy.stats import ttest_ind
 
 def run_2sample_ttest_spm(spm_path,save_dir,
         group1: list,
@@ -17,7 +20,7 @@ def run_2sample_ttest_spm(spm_path,save_dir,
         group2_covar2 = False,
         mask: str = False,
         contrast_name: str = "contrast",
-        contrast: str = "[1 -1 0 0]",
+        contrast: str = "[1 -1 0]",
         ):
     """
     Executes a two-sample voxel-wise t-test in SPM via MATLAB, computes Cohen’s d maps,
@@ -105,9 +108,9 @@ def run_2sample_ttest_spm(spm_path,save_dir,
     mfile_estimate = join(save_dir, "estimate.m")
     spm_mat = join(save_dir, "SPM.mat")
 
-    spm.generate_mfile_estimate_model(mfile_estimate, spm_mat)
+    spm.generate_mfile_estimate_model(spm_path,mfile_estimate,spm_mat)
 
-    processor.run_matlab_command(mfile_model)
+    processor.run_matlab_command(mfile_estimate)
 
     print("Calculating results....")
 
@@ -115,7 +118,7 @@ def run_2sample_ttest_spm(spm_path,save_dir,
     spm_mat = join(save_dir, "SPM.mat")
 
     spm.generate_mfile_contrast(spm_path, mfile_results, spm_mat, contrast_name = contrast_name, contrast = contrast)
-    processor.run_matlab_command(mfile_model)
+    processor.run_matlab_command(mfile_results)
 
     print("Converting results to Cohens d....")
 
@@ -236,3 +239,55 @@ def run_2sample_ttest_cat12_new_tiv_model(spm_path, save_dir,
     print("Calculating thresholds for Cohens d (FDR corrected ....")
     t_thres, cohens_d_thres = utils.get_fdr_thresholds_from_spmt(out_t_values, n1 = len(group1), n2 = len(group2))
     print(t_thres,cohens_d_thres)
+
+def run_2sample_ttest_atlas(group1: list, group2: list, atlas_path, output_path, operation = "mean"):
+
+    atlas_img = nib.load(atlas_path)
+    atlas_data = atlas_img.get_fdata()
+
+    result = atlas_data * 0
+    p_vals = atlas_data * 0
+
+    # Get the unique values of the atlas, which correspond to the ROIs
+    rois = np.unique(atlas_data)
+    
+    # Loop over the ROIs
+    for i in rois:
+        if i != 0:
+            # Get the indices of the voxels that belong to the current ROI
+            indx = np.where(atlas_data == i)
+            
+            group_1_vals = []
+            
+            for image in group1:
+                img_ = nib.load(image)
+                img_data = img_.get_fdata()
+                if operation == "mean":
+                    val = np.mean(img_data[indx])
+                if operation == "sum":
+                    val = np.sum(img_data[indx])
+                group_1_vals.append(val)
+            
+            group_2_vals = []
+            
+            for image in group2:
+                img_ = nib.load(image)
+                img_data = img_.get_fdata()
+                if operation == "mean":
+                    val = np.mean(img_data[indx])
+                if operation == "sum":
+                    val = np.sum(img_data[indx])
+                group_2_vals.append(val)
+        
+            t_stat, p_val = ttest_ind(group_1_vals, group_2_vals, equal_var=True)
+            cohens_d = t_stat*(np.sqrt(1 / len(group_1_vals) + 1 / len(group_2_vals)))
+
+            result[indx] =  cohens_d
+            p_vals[indx] = p_val
+    
+    results_img = nib.Nifti1Image(result,atlas_img.affine, atlas_img.header)
+    nib.save(results_img,join(output_path,'cohens_d.nii'))
+
+    pvals_img = nib.Nifti1Image(p_vals,atlas_img.affine, atlas_img.header)
+    nib.save(pvals_img,join(output_path,'p_values.nii'))
+

@@ -458,7 +458,8 @@ def get_fdr_thresholds_from_spmt(img_, n1: int, n2: int):
     :return: FDR-corrected Cohen's d threshold
     """
     # Load the NIFTI image
-    data = img_.get_fdata()
+    img_in = nib.load(img_)
+    data = img_in.get_fdata()
 
     # Flatten the data to get a 1D array of t-values
     t_values = data.flatten()

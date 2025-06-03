@@ -13,11 +13,13 @@ def run_matlab_command(mfile, matlab_cmd="/usr/local/MATLAB/R2025a/bin/matlab"):
     mfile_path, mfile_name = os.path.split(mfile)
 
     command = f"{matlab_cmd} -nosplash -sd {mfile_path} -batch {mfile_name[0:-2]}"
+    
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
 
     if len(result.stderr) == 0:
         print(f"Successfully executed {mfile_name}")
     else:
+        print(result)
         raise Exception(result.stderr)
 
 def intensity_normalize_pet_histogram(input_image, template, mask):
