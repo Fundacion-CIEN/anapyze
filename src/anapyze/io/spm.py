@@ -14,7 +14,7 @@ def generate_mfile_coregister(spm_path, mfile_name,
 
     new_spm = open(mfile_name, "w")
 
-    new_spm.write(f"addpath({spm_path})\n")
+    new_spm.write(f"addpath('{spm_path}')\n")
     new_spm.write(design_type + "ref = {'" + reference_image + ",1'};\n")
     new_spm.write(design_type + "source = {'" + source_image + ",1'};\n")
     new_spm.write(design_type + "other = {''};\n")
@@ -44,7 +44,7 @@ def generate_mfile_old_normalize(spm_path, mfile_name,
 
     new_spm = open(mfile_name, "w")
 
-    new_spm.write(f"addpath({spm_path})\n")
+    new_spm.write(f"addpath('{spm_path}')\n")
 
     design_type = "matlabbatch{1}.spm.tools.oldnorm.estwrite."
 
@@ -81,13 +81,14 @@ def generate_mfile_old_normalize(spm_path, mfile_name,
     new_spm.write("spm_jobman('run',matlabbatch);" + "\n")
 
     new_spm.close()
+
 def generate_mfile_old_deformations(spm_path, mfile_name,
                                     def_matrix, base_image,
                                     images_to_deform, interpolation):
 
     new_spm = open(mfile_name, "w")
 
-    new_spm.write(f"addpath({spm_path})\n")
+    new_spm.write(f"addpath('{spm_path}')\n")
 
     source_img_path, source_img_name = os.path.split(images_to_deform[0])
 
@@ -131,7 +132,7 @@ def generate_mfile_new_normalize(spm_path, mfile_name, template_image, images_to
 
     new_spm = open(mfile_name, "w")
 
-    new_spm.write(f"addpath({spm_path})\n")
+    new_spm.write(f"addpath('{spm_path}')\n")
 
     design_type = "matlabbatch{1}.spm.spatial.normalise.estwrite."
 
@@ -173,7 +174,7 @@ def generate_mfile_new_deformations(spm_path, mfile_name,
 
     new_spm = open(mfile_name, "w")
 
-    new_spm.write(f"addpath({spm_path})\n")
+    new_spm.write(f"addpath('{spm_path}')\n")
 
     design_type_comp = "matlabbatch{1}.spm.util.defs.comp{1}."
     design_type_out = "matlabbatch{1}.spm.util.defs.out{1}."
@@ -198,12 +199,11 @@ def generate_mfile_new_deformations(spm_path, mfile_name,
 
     new_spm.close()
 
-
 def generate_mfile_smooth_imgs(spm_path, mfile_name, images_to_smooth, smoothing):
 
     new_spm = open(mfile_name, "w")
 
-    new_spm.write(f"addpath({spm_path})\n")
+    new_spm.write(f"addpath('{spm_path}')\n")
 
     design_type = "matlabbatch{1}.spm.spatial.smooth."
     smoothing_array = (
@@ -221,9 +221,11 @@ def generate_mfile_smooth_imgs(spm_path, mfile_name, images_to_smooth, smoothing
     new_spm.write(design_type + "im = 0;" + "\n")
     new_spm.write(design_type + "prefix ='" + "s" + "';" + "\n")
 
+    new_spm.write("spm('defaults','fmri');\n")
+    new_spm.write("spm_jobman('initcfg');\n")
+    new_spm.write("spm_jobman('run',matlabbatch);\n")
+
     new_spm.close()
-
-
 
 def generate_mfile_model(spm_path, mfile_name,
                          save_dir, group1, group2,

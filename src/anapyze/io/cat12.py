@@ -3,7 +3,7 @@ from os.path import join, exists
 import shutil
 
 def generate_mfile_cat12_segmentation_crossec(spm_path: str, mfile_name: str,
-                                              images_to_seg: list[str],
+                                              images_to_seg: list,
                                               template_tpm: str,
                                               template_volumes: str,
                                               number_of_cores: int = 0,
@@ -16,7 +16,7 @@ def generate_mfile_cat12_segmentation_crossec(spm_path: str, mfile_name: str,
 
     new_spm = open(mfile_name, "w")
 
-    new_spm.write(f"addpath({spm_path})\n")
+    new_spm.write(f"addpath('{spm_path}')\n")
 
     design_type = "matlabbatch{1}.spm.tools.cat.estwrite."
 
@@ -181,7 +181,7 @@ def generate_mfile_cat12_segmentation_crossec(spm_path: str, mfile_name: str,
 
 
 def generate_mfile_cat12_segmentation_longit(spm_path: str, mfile_name: str,
-                                             images_to_seg: list[list],
+                                             images_to_seg: list,
                                              template_tpm: str,
                                              template_volumes: str,
                                              longmodel: int = 2,
@@ -194,7 +194,7 @@ def generate_mfile_cat12_segmentation_longit(spm_path: str, mfile_name: str,
 
     new_spm = open(mfile_name, "w")
 
-    new_spm.write(f"addpath({spm_path})\n")
+    new_spm.write(f"addpath('{spm_path}')\n")
 
     design_type = "matlabbatch{1}.spm.tools.cat.long."
 
@@ -261,8 +261,8 @@ def generate_mfile_cat12_segmentation_longit(spm_path: str, mfile_name: str,
 
 
 def generate_mfile_cat12_new_tiv_model(spm_path: str, mfile_name: str, save_dir: str,
-                           group1: list[str], group1_ages: list[float], group1_tivs: list[float],
-                           group2: list[str], group2_ages: list[float], group2_tivs: list[float],
+                           group1: list, group1_ages: list, group1_tivs: list,
+                           group2: list, group2_ages: list, group2_tivs: list,
                            mask: str,):
 
     if exists(save_dir):
@@ -272,7 +272,7 @@ def generate_mfile_cat12_new_tiv_model(spm_path: str, mfile_name: str, save_dir:
 
     new_spm = open(mfile_name, "w")
 
-    new_spm.write(f"addpath({spm_path})\n")
+    new_spm.write(f"addpath('{spm_path}')\n")
 
     design_type = "matlabbatch{1}.spm.tools.cat.factorial_design."
 
