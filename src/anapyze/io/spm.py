@@ -313,7 +313,7 @@ def generate_mfile_estimate_model(spm_path, mfile_name, spm_mat):
     new_spm = open(mfile_name, "w")
 
     new_spm.write(f"addpath ('{spm_path}');\n\n")
-
+    
     design_type = "matlabbatch{1}.spm.stats.fmri_est."
 
     new_spm.write(design_type + "spmmat = {'" + spm_mat + "'};\n")

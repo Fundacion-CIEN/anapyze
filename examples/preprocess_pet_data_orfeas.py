@@ -22,31 +22,31 @@ nib.save(template_fdg_img, template_fdg_nii)
 
 list_dirs = os.listdir(dir_patients)
 
-print("Spatial Normalization...")
+# print("Spatial Normalization...")
 
-images_to_norm = []
+# images_to_norm = []
 
-mfile_name = join(dir_patients, 'fdg_pet_spatial_norm.m')
+# mfile_name = join(dir_patients, 'fdg_pet_spatial_norm.m')
 
-for i in list_dirs:
+# for i in list_dirs:
 
-    dir_subj = join(dir_patients, i)
+#     dir_subj = join(dir_patients, i)
 
-    fdg_image = join(dir_subj, f'{i}.nii')
+#     fdg_image = join(dir_subj, f'{i}.nii')
 
-    if exists(fdg_image):
+#     if exists(fdg_image):
 
-        img_ = nib.load(fdg_image)
-        img_ = utils.remove_nan_negs(img_)
+#         img_ = nib.load(fdg_image)
+#         img_ = utils.remove_nan_negs(img_)
 
-        nib.save(img_, fdg_image)
+#         nib.save(img_, fdg_image)
 
-        images_to_norm.append(fdg_image)
+#         images_to_norm.append(fdg_image)
 
-    else:
-        print('PET missing for directory: ', i)
+#     else:
+#         print('PET missing for directory: ', i)
 
-processor.old_normalize_spm(images_to_norm, template_fdg_nii, mfile_name, spm_path=spm_path)
+# processor.old_normalize_spm(images_to_norm, template_fdg_nii, mfile_name, spm_path=spm_path)
 
 print("Smoothing...")
 
