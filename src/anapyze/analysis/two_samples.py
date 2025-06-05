@@ -291,3 +291,49 @@ def run_2sample_ttest_atlas(group1: list, group2: list, atlas_path, output_path,
     pvals_img = nib.Nifti1Image(p_vals,atlas_img.affine, atlas_img.header)
     nib.save(pvals_img,join(output_path,'p_values.nii'))
 
+def run_anova_with_covariate_atlas(group1, group2, group1_covar, group2_covar, atlas_path, output_path, operation="mean"):
+    
+    atlas_img = nib.load(atlas_path)
+    atlas_data = atlas_img.get_fdata()
+
+    f_stats = np.zeros_like(atlas_data)
+    p_vals = np.ones_like(atlas_data)
+ 
+    rois = np.unique(atlas_data)
+    rois = rois[rois != 0]
+
+    all_imgs = group1 + group2
+    all_covars = group1_covar + group2_covar
+    all_groups = [0] * len(group1) + [1] * len(group2)
+
+    for roi in rois:
+        mask = atlas_data == roi
+        roi_vals = []
+     
+        for img_path in all_imgs:
+            data = nib.load(img_path).get_fdata()
+            if operation == "mean":
+                val = np.mean(data[mask])
+            elif operation == "sum":
+                val = np.sum(data[mask])
+            else:
+                raise ValueError(f"Unsupported operation: {operation}")
+            roi_vals.append(val)
+        
+        df = pd.DataFrame({
+            "value": roi_vals,
+            "group": all_groups,
+            "age": all_covars
+        })
+
+        df['group'] = df['group'].astype('category')
+
+        X = sm.add_constant(pd.get_dummies(df[['group', 'age']], drop_first=True))
+        model = sm.OLS(df['value'], X).fit()
+        f_test = model.f_test("group_1")  
+        
+        f_stats[mask] = f_test.fvalue.item()
+        p_vals[mask] = f_test.pvalue.item()
+
+    nib.save(nib.Nifti1Image(f_stats, atlas_img.affine, atlas_img.header), os.path.join(output_path, "f_stat_group.nii"))
+    nib.save(nib.Nifti1Image(p_vals, atlas_img.affine, atlas_img.header), os.path.join(output_path, "p_values_group.nii"))
