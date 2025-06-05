@@ -293,6 +293,7 @@ def run_2sample_ttest_atlas(group1: list, group2: list, atlas_path, output_path,
     pvals_img = nib.Nifti1Image(p_vals,atlas_img.affine, atlas_img.header)
     nib.save(pvals_img,join(output_path,'p_values.nii'))
 
+
 def run_2sample_anova_with_covariate_atlas(group1, group2, group1_covar, group2_covar, atlas_path, output_path, operation="mean"):
   
     atlas_img = nib.load(atlas_path)
@@ -304,10 +305,11 @@ def run_2sample_anova_with_covariate_atlas(group1, group2, group1_covar, group2_
 
     rois = np.unique(atlas_data)
     rois = rois[rois != 0]
-
+    
     all_imgs = group1 + group2
     all_covars = group1_covar + group2_covar
     all_groups = [0] * len(group1) + [1] * len(group2)
+
 
     n1 = len(group1)
     n2 = len(group2)
@@ -342,7 +344,3 @@ def run_2sample_anova_with_covariate_atlas(group1, group2, group1_covar, group2_
     nib.save(nib.Nifti1Image(f_stats, atlas_img.affine, atlas_img.header), os.path.join(output_path, "f_stat_group.nii"))
     nib.save(nib.Nifti1Image(d_vals, atlas_img.affine, atlas_img.header), os.path.join(output_path, "cohens_d_group.nii"))
     nib.save(nib.Nifti1Image(p_vals, atlas_img.affine, atlas_img.header), os.path.join(output_path, "p_values_group.nii"))
-
-
-
-
