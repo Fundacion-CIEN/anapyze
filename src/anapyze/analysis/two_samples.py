@@ -310,10 +310,15 @@ def run_2sample_anova_with_covariate_atlas(group1, group2, group1_covar, group2_
     all_covars = group1_covar + group2_covar
     all_groups = [0] * len(group1) + [1] * len(group2)
 
-
     n1 = len(group1)
     n2 = len(group2)
 
+    roi_stats = []
+
+    # Add default (multiple) covariate names
+    if covar_names is None:
+        covar_names = [f"covar{i+1}" for i in range(all_covars.shape[1])]
+     
     for roi in rois:
         mask = atlas_data == roi
         roi_vals = []
@@ -330,17 +335,44 @@ def run_2sample_anova_with_covariate_atlas(group1, group2, group1_covar, group2_
         })
 
         df['Group'] = df['Group'].astype('category')
-        X = sm.add_constant(pd.get_dummies(df[["Group", "age"]], drop_first=True))
-        model = sm.OLS(df["value"], X).fit()
-        f_test = model.f_test("Group[T.1]")
+        df["value"] = pd.to_numeric(df["value"], errors='raise')
+        df["age"] = pd.to_numeric(df["age"], errors='raise')
+            
+        # Add when including multiple covariate 
+        for col in covar_names:
+            df[col] = pd.to_numeric(df[col], errors='raise')
 
-        f_val = f_test.fvalue.item()
+        group_dummies = pd.get_dummies(df["Group"], drop_first=True)
+        X = pd.concat([group_dummies, df["age"]], axis=1)
+        X = sm.add_constant(X)
+
+        if 1 in X.columns:
+            X = X.rename(columns={1: "group"})
+        if "group" in X.columns and X["group"].dtype == bool:
+            X["group"] = X["group"].astype(int)
+
+        # Check NaNs
+        if df["value"].isnull().any() or df["age"].isnull().any() or X.isnull().any().any():
+            raise ValueError(f"NaNs detected in data for ROI {roi}")
+
+        model = sm.OLS(df["value"], X).fit()
+        f_test = model.f_test("group = 0")
+
+        f_val = float(f_test.fvalue)
         d_val = np.sqrt(f_val * (n1 + n2) / (n1 * n2)) if f_val > 0 else 0.0
+        p_val = f_test.pvalue.item()
 
         f_stats[mask] = f_val
         d_vals[mask] = d_val
-        p_vals[mask] = f_test.pvalue.item()
+        p_vals[mask] = p_val
 
+        roi_stats.append({
+            "ROI": roi,
+            "F_value": f_val,
+            "p_value": p_val,
+            "Cohens_d": d_val
+        })
+        
     nib.save(nib.Nifti1Image(f_stats, atlas_img.affine, atlas_img.header), os.path.join(output_path, "f_stat_group.nii"))
     nib.save(nib.Nifti1Image(d_vals, atlas_img.affine, atlas_img.header), os.path.join(output_path, "cohens_d_group.nii"))
     nib.save(nib.Nifti1Image(p_vals, atlas_img.affine, atlas_img.header), os.path.join(output_path, "p_values_group.nii"))
