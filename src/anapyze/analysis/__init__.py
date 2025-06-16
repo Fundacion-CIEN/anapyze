@@ -13,11 +13,16 @@ from .correlations import (
     normalized_cross_correlation_2images,
 )
 
+from .visualization import (
+    plot_atlas_result_to_surf,
+)
+
 __all__ = [
     'run_2sample_ttest_spm',
     'run_2sample_ttest_cat12_new_tiv_model',
     'run_2sample_ttest_atlas',
     'voxel_wise_corr_images_vs_scale',
     'image_to_image_corr_atlas_based_spearman',
-    'normalized_cross_correlation_2images'
+    'normalized_cross_correlation_2images',
+    'plot_atlas_result_to_surf'
 ]
