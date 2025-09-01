@@ -11,7 +11,7 @@ DERIVATIVES_RES_DIR = Path('/mnt/nasneuro_share/data/derivatives/ashs/PVallecas'
 TEMP_BASE_DIR = Path('/mnt/WORK/data/ASHS_OUTPUT_TEMP')
 ASHS_ROOT = '/mnt/WORK/software/ashs/bin/ashs_main.sh'
 ATLAS_PATH = Path('/mnt/WORK/software/ashs/ashs_T1_atlas/ashsT1_atlas_upennpmc_07202018')
-NUM_WORKERS = 8
+NUM_WORKERS = 4
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -44,10 +44,14 @@ def process_visit(task_args):
         shutil.rmtree(temp_out_dir)
 
         finish_time_visit = datetime.now()
-        
-        log.info(f"{subj_id} finished successfully.It took {finish_time_visit}")
 
-        return f"{subj_id}/{visit_id}: Finished in {finish_time_visit}"
+
+        duration_process = finish_time_visit - start_time_visit
+
+        
+        log.info(f"{subj_id} finished successfully.It took {duration_process}")
+
+        return f"{subj_id}/{visit_id}: Finished at {finish_time_visit}"
 
     except Exception as e:
         log.error(f"ERROR: {e}")
@@ -67,10 +71,14 @@ def main():
     for subj_path in COHORT_DIR.iterdir():
         if subj_path.is_dir():
             for visit_path in subj_path.iterdir():
-                if visit_path.is_dir() and visit_path.name == 'V01': #OJO RESTRINGIMOS A VISITA 1
+                if visit_path.is_dir(): #OJO RESTRINGIMOS A VISITA 1
                     t1_image = visit_path / 'T1' / f'{subj_path.name}_T1_{visit_path.name}.nii.gz'
-                    if t1_image.exists():
+
+                    result_to_test = DERIVATIVES_RES_DIR / subj_path.name / visit_path.name / "final" / f"{subj_path.name}_{visit_path.name}_left_lfseg_heur.nii.gz"
+                    if t1_image.exists() and not result_to_test.exists():
                         tasks.append((subj_path.name, visit_path.name, t1_image))
+                    else:
+                        print(f"I already have a result for {subj_path.name} visit {visit_path.name}")
 
     logging.info(f"I found {len(tasks)} jobs!. Starting process with {NUM_WORKERS} images processed in parallel.")
 
